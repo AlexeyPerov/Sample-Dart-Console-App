@@ -10,7 +10,8 @@ void main(List<String> arguments) async {
     ..addOption('file', abbr: 'f')
     ..addOption('directory', abbr: 'd')
     ..addFlag('reverse', abbr: 'r')
-    ..addFlag('hidden', abbr: 'h');
+    ..addFlag('hidden', abbr: 'h')
+    ..addFlag('replaceAll', abbr: 'a');
 
   argResults = parser.parse(arguments);
 
@@ -19,12 +20,13 @@ void main(List<String> arguments) async {
 
   var reversed = argResults['reverse'] as bool;
   var includeHidden = argResults['hidden'] as bool;
+  var replaceAll = argResults['replaceAll'] as bool;
 
   var keysFilePath = argResults['file'];
 
   var keysMap = <String, String>{};
 
-  var exp = RegExp(r'(\w*)=(.*)');
+  var exp = RegExp(r'(.*)=(.*)');
 
   final lines = utf8.decoder
       .bind(File(keysFilePath).openRead())
@@ -39,7 +41,7 @@ void main(List<String> arguments) async {
     stderr.writeln('error: $e');
   }
 
-  var options = ReplacerOptions(keysMap, reversed, includeHidden);
+  var options = ReplacerOptions(keysMap, reversed, includeHidden, replaceAll);
   var replacer = KeysReplacer(options);
 
   await replacer.traverse(argResults['directory']);
@@ -93,7 +95,7 @@ class KeysReplacer {
 
         if (contents.contains(key)) {
           var question = 'Update $key to $value in ${entity.path}?';
-          if (ask(question)) {
+          if (options.replaceAll || ask(question)) {
             overwritten = true;
             contents = contents.replaceAll(key, value);
           }
@@ -130,6 +132,8 @@ class ReplacerOptions {
   final Map<String, String> keys;
   final bool reversedReplacement;
   final bool includeHidden;
+  final bool replaceAll;
 
-  ReplacerOptions(this.keys, this.reversedReplacement, this.includeHidden);
+  ReplacerOptions(this.keys, this.reversedReplacement,
+      this.includeHidden, this.replaceAll);
 }
