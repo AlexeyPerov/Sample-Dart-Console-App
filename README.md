@@ -1,5 +1,5 @@
-An example Dart command-line application that performs string replace operations.
-e.g. a package name change.
+A simple Dart command-line application that performs replace operations
+e.g. package name change.
 
 ## Usage
 
@@ -26,5 +26,7 @@ KEY2=VALUE2
 
 example:
 -f .keys -d [folder_name] -h
+where .keys is:
+com.example.app=com.myorg.myapp
 
 
