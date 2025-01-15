@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 
-ArgResults argResults;
-
 void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('file', abbr: 'f')
@@ -13,7 +11,13 @@ void main(List<String> arguments) async {
     ..addFlag('hidden', abbr: 'h')
     ..addFlag('replaceAll', abbr: 'a');
 
-  argResults = parser.parse(arguments);
+  var argResults = parser.parse(arguments);
+
+  if (argResults['file'] == null || argResults['directory'] == null)
+  {
+    stdout.writeln('required arguments have not been provided');
+    return;
+  }
 
   stdout.writeln('keys file: ' + argResults['file']);
   stdout.writeln('directory: ' + argResults['directory']);
@@ -31,11 +35,12 @@ void main(List<String> arguments) async {
   final lines = utf8.decoder
       .bind(File(keysFilePath).openRead())
       .transform(const LineSplitter());
+      
   try {
     await for (var line in lines) {
       var match = exp.firstMatch(line);
-      stdout.writeln(match.group(1) + '=' + match.group(2));
-      keysMap[match.group(1)] = match.group(2);
+      stdout.writeln(match!.group(1)! + '=' + match.group(2)!);
+      keysMap[match.group(1)!] = match.group(2)!;
     }
   } catch (e) {
     stderr.writeln('error: $e');
@@ -54,7 +59,7 @@ class KeysReplacer {
 
   KeysReplacer(this.options);
 
-  void traverse(String path) async {
+  Future<void> traverse(String path) async {
     var directory = Directory(path);
 
     if (await directory.exists()) {
@@ -111,20 +116,17 @@ class KeysReplacer {
   }
 
   bool ask(String question) {
-    bool answered;
-
-    while (answered == null) {
+        
+    while (true) {
       stdout.writeln(question + ' Y/n');
       var answer = stdin.readLineSync();
 
       if (answer == 'Y') {
-        answered = true;
+        return true;
       } else if (answer == 'n') {
-        answered = false;
+        return false;
       }
-    }
-
-    return answered;
+    }    
   }
 }
 
